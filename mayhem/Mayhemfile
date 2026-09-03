@@ -1,0 +1,23 @@
+# Mayhem target: mm0-c — the "bare bones C" MM0 proof verifier (mm0-c/).
+# Ported from the fork's original top-level Mayhemfile (project mm0, target mm0-c, which ran
+# the binary as "/mm0-c @@"). File-input target: mm0-c is built with -D NO_PARSER, so it verifies
+# the .mmb binary-proof file given as argv[1] for internal correctness and ignores stdin.
+# @@ is the fuzzed input file; filepath names it with the .mmb extension mm0-c consumes.
+# The binary lives at /mayhem/bin/mm0-c (built by mayhem/build.sh; /mayhem/mm0-c is the source dir).
+project: savantenvs/mm0
+target: mm0-c-buggy-mhh-run-59
+# origin: https://app.mayhem.security/mayhemheroes/mm0/mm0-c/59
+
+cmds:
+  - cmd: /mayhem/bin/mm0-c @@
+    filepath: /tmp/input.mmb
+    # Mayhem's default synthetic probe input timed out against the ASan-instrumented binary's
+    # startup (large shadow-memory reservation); raise the per-run timeout past that cost.
+    timeout: 30
+    # mayhem-fuzz itself restart-loops (rc=254) driving this ASan binary; Mayhem's own
+    # remediation for exactly this failure is MFUZZ_COMPAT_LEVEL.
+    env:
+      MFUZZ_COMPAT_LEVEL: "1"
+
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
